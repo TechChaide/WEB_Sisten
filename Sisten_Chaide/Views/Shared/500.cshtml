@@ -1,0 +1,12 @@
+﻿@using www
+
+@{
+	ViewBag.Title = string.Format("{0}, {1}", ApplicationContext.LoggedUser, "Access Denied");
+	Layout = "~/Views/Shared/_MainLayout.cshtml";	
+}
+
+<p class="text-center">
+	<span class="text-danger" style="font-size:4em">Oops!</span>
+</p>
+<p class="text-center">Usted no tiene los suficientes privilegios para ingresar a esta página</p>
+<p class="text-center">Contáctese con su administrador para mejor asistencia</p>

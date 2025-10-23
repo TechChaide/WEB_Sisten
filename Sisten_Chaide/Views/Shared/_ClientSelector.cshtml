@@ -1,0 +1,28 @@
+﻿@using Newtonsoft.Json
+@using Sisten_Chaide.Resources.Labels
+
+
+
+@model IEnumerable<Model.Entities.Client>
+
+<table class="table table-striped table-condensed table-bordered table-selected datatables dataTable">
+	<thead>
+		<tr>
+			<th>@Labels.Identification</th>
+			<th>@Labels.Names</th>
+			<th>@Labels.Country</th>
+			<th>@Labels.City</th>			
+		</tr>
+	</thead>
+	<tbody>
+		@foreach(var c in Model)
+		{
+			<tr data-json="@JsonConvert.SerializeObject(c)">
+				<td>@Html.DisplayFor(m => c.document_number)</td>
+				<td>@Html.DisplayFor(m => c.full_name)</td>
+				<td>@Html.DisplayFor(m => c.country_name)</td>
+				<td>@Html.DisplayFor(m => c.city_name)</td>				
+			</tr>
+		}
+	</tbody>
+</table>

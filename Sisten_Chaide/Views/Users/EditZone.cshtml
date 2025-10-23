@@ -1,0 +1,98 @@
+﻿@using System.Web.Script.Serialization
+@using www
+@using www.Helpers
+@using Sisten_Chaide.Resources.Labels
+@using Sisten_Chaide.Models
+
+@model Zone
+@{
+  ViewBag.Title = "Zonas";
+  ViewBag.PageTitle = @Labels.ZoneInformation;
+  Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+
+
+
+<link rel="stylesheet" href="@Url.Content("~/Styles/kendo/kendo.common.min.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Styles/kendo/kendo.default.min.css")" />
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery-1.7.1.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery-ui-1.10.1.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.unobtrusive.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.ui.timepicker.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/labels.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/inputmask/jquery.inputmask.bundle.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/web.zone.js")"></script>
+
+@*<script src='https://api.mapbox.com/mapbox.js/v2.2.2/mapbox.js'></script>
+  <link href='https://api.mapbox.com/mapbox.js/v2.2.2/mapbox.css' rel='stylesheet' />
+  <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.css' rel='stylesheet' />
+  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-draw/v0.2.2/leaflet.draw.js'></script>
+  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/L.Control.Locate.min.js'></script>
+  <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/L.Control.Locate.mapbox.css' rel='stylesheet' />
+  <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/L.Control.Locate.ie.css' rel='stylesheet' />
+  <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-locatecontrol/v0.43.0/css/font-awesome.min.css' rel='stylesheet' />
+  <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-label/v0.2.1/leaflet.label.js'></script>
+  <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-label/v0.2.1/leaflet.label.css' rel='stylesheet' />*@
+
+<link rel="stylesheet" type="text/css" href="http://cdn.leafletjs.com/leaflet-0.7.5/leaflet.css" />
+<link rel="stylesheet" href="http://leaflet.github.io/Leaflet.draw/leaflet.draw.css"/>
+<link rel="stylesheet" href="http://k4r573n.github.io/leaflet-control-osm-geocoder/Control.OSMGeocoder.css" />
+<link href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css" rel="stylesheet">
+<link rel="stylesheet" href="https://raw.githubusercontent.com/CliffCloud/Leaflet.EasyButton/master/src/easy-button.css" />
+
+<script type='text/javascript' src='http://cdn.leafletjs.com/leaflet-0.7.5/leaflet.js?2'></script>
+<script type='text/javascript' src="http://leaflet.github.io/Leaflet.draw/leaflet.draw.js"></script>
+<script src="http://k4r573n.github.io/leaflet-control-osm-geocoder/Control.OSMGeocoder.js"></script>
+<script type="text/javascript" src="https://rawgit.com/CliffCloud/Leaflet.EasyButton/master/src/easy-button.js"></script>
+
+<style>
+  #map {
+    position: relative;
+    height: 500px;
+  }
+</style>
+
+<div class="col-sm-12 clients">
+  @using (Html.BeginForm("addZone", "Users", FormMethod.Post, new { enctype = "multipart/form-data" }))
+  {
+    @Html.HiddenFor(m => m.Polygon)
+    @Html.HiddenFor(m => m.Id)
+    @Html.HiddenFor(m => m.CreationDate)
+    @Html.HiddenFor(m => m.UserId)
+
+    <div class="panel panel-inverse">
+      <div class="form-group">
+        <label class="control-label col-sm-2">@Labels.ZoneName </label>
+        <div class="col-sm-4">
+          @Html.TextBoxFor(m => m.name, new { @class = "form-control input-sm" })
+          @Html.ValidationMessageFor(m => m.name)
+          <input type="hidden" id="Userid" value="@ViewBag.id" />
+        </div>
+      </div>
+    </div>
+
+    <div class="panel panel-inverse">
+      <div class="panel-heading">
+        <h4>@Labels.ZoneInformation</h4>
+      </div>
+      <div class="panel-body" id="map">
+      </div>
+    </div>
+
+    if (ApplicationContext.LoggedUser != null)
+    {
+
+      <p class="btn-group pull-right">
+        <div style="margin: 10px 0;">
+          <a class="btn btn-default" href="@Url.Action("Index")">@Labels.Cancel</a>
+          <input type="submit" class="btn btn-primary" value="@Labels.Save" />
+        </div>
+      </p>
+    }
+  }
+
+</div>
+
+

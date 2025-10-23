@@ -1,0 +1,95 @@
+﻿@using Sisten_Chaide
+@using Sisten_Chaide.Helpers
+
+@using Newtonsoft.Json
+
+@using Sisten_Chaide.Resources.Labels
+@model Sisten_Chaide.Models.FormUser
+
+@{
+    //ViewBag.Title = string.Format("{0}", ViewBag.PageTitle);
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+    ViewBag.PageTitle = ViewBag.PageTitle;
+}
+
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.unobtrusive.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.custom.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/labels.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/inputmask/jquery.inputmask.bundle.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/web.zone_assing_driver.js")"></script>
+@{
+    Message msg = TempData["Message"] as Message;
+    if (msg != null)
+    {
+        @Html.Partial("_Message" , msg);
+    }
+}
+
+<div class="col-sm-12 clients">
+    @using (Html.BeginForm("AssingDriverZone" , "Zones" , FormMethod.Post , new { @class = "form-horizontal" }))
+    {
+        @Html.HiddenFor(m => m.user.Id)
+        @Html.HiddenFor(m => m.users_name)
+        @Html.HiddenFor(m => m.user_IdSession)
+
+        <div class="panel panel-inverse">
+            <div class="panel-heading">
+                <h4>@Labels.UserInformation</h4>
+            </div>
+            <div class="panel-body">
+                @*<div class="form-group">
+                    <div class="required-fields pull-right">@Labels.RequiredFields</div>
+                </div>*@
+                <div class="form-group">
+                    <label class="control-label col-sm-2">@Labels.First_name </label>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(m => m.user.First_Name , new { @class = "form-control input-sm" , @disabled = "disabled" })
+                        @Html.ValidationMessageFor(m => m.user.First_Name)
+                    </div>
+                    <label class="control-label col-sm-2">@Labels.Last_name </label>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(m => m.user.Last_Name , new { @class = "form-control input-sm", @disabled = "disabled"})
+                        @Html.ValidationMessageFor(m => m.user.Last_Name)
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-sm-2">@Labels.Username </label>
+                    <div class="col-sm-4">@Html.TextBoxFor(m => m.user.User_Name , new { @class = "form-control input-sm" , @disabled = "disabled" })</div>
+                </div>
+
+            </div>
+        </div>
+        <div class="panel panel-orange">
+            <div class="panel-heading">
+                <h4>@Labels.AvailableZones</h4>
+            </div>
+            <div class="panel-body">
+                <div class="col-sm-4">
+                    @Html.HiddenFor(m => m.list_zones)
+                    <ul class="perfil-ul">
+                        @for (int j = 0 ; j < Model.user.list_zone.Count ; j++)
+                        {
+                            <li>
+                                <div>
+                                    @Html.CheckBoxFor(m => m.user.list_zone[j].UserAssing , new { @class = "group-feature-selector" , data_zone = Model.user.list_zone[j].Id , data_val = true })
+                                    @Model.user.list_zone[j].name
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <p class="btn-group pull-right">
+
+            <a class="btn btn-default" href="@Url.Action("AssingIndex")">@Labels.Cancel</a>
+            <input type="submit" class="btn btn-primary" value="@Labels.Save" />
+        </p>
+
+    }
+
+</div>

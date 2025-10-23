@@ -1,0 +1,73 @@
+﻿@using Sisten_Chaide.Resources.Labels
+@model Sisten_Chaide.Models.User
+@using Resources
+@using Sisten_Chaide.Attributes
+@using Sisten_Chaide.Helpers
+@using Sisten_Chaide.Resources.Labels
+@using Sisten_Chaide.Models
+@{
+    Layout = null;
+    ViewBag.Title = "Login";
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+
+    <link rel="stylesheet" href="@Url.Content("~/Styles/app/style.css")" />
+
+    <script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery-1.8.2.min.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.unobtrusive.min.js")"></script>
+
+</head>
+<body>
+    <div>
+        <header class="navbar">
+            <div id="navbar-brand"></div>
+        </header>
+        <div style="width: 30%; margin: 10% auto">
+            <div class="panel panel-inverse">
+
+                <div class="MainLogo"><img src="~/Resources/Images/LogoSisten.png" /></div>
+
+                <div class="panel-heading">
+                    @*<i class="icon-highlight fa fa-lock"></i>*@
+                    <h4>
+                        Login
+                    </h4>
+                    <span class="pull-right version">Versión @ViewContext.Controller.GetType().Assembly.GetName().Version</span>
+                </div>
+
+                <div class="panel-body">
+                    @using (Html.BeginForm("Login", "Account", FormMethod.Post, new { @class = "form-horizontal" }))
+                    {
+                        @Html.ValidationSummary(true)
+                        <div class="form-group">
+                            <label class="control-label col-sm-2">@Html.LabelForModel(@Labels.Username)</label>
+                            <div class="col-md-7">@Html.TextBoxFor(m => m.User_Name, new { @class = "form-control", placeholder = Labels.Username, autofocus = "autofocus" })</div>
+                            <div class="col-md-3">@Html.ValidationMessageFor(m => m.User_Name)</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-sm-2">@Html.LabelForModel(@Labels.Password)</label>
+                            <div class="col-md-7">@Html.PasswordFor(m => m.password, new { @class = "form-control", placeholder = Labels.Password })</div>
+                            <div class="col-md-3">@Html.ValidationMessageFor(m => m.password)</div>
+                        </div>
+                        <input type="submit" class="btn btn-primary pull-right" value="@Labels.BtnLogin" />
+                    }
+                </div>
+
+                <div class="SecondaryLogo"><img src="~/Resources/Images/LogoChaide.png" /></div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        @*<span class="pull-right powered">v00.00.01</span>*@
+    </footer>
+</body>
+</html>

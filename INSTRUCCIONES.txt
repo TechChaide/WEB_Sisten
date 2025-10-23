@@ -1,0 +1,524 @@
+################################################################################
+#                                                                              #
+#          DOCUMENTACIÓN TÉCNICA DEL SISTEMA DE LOGÍSTICA Y ENTREGAS           #
+#                                                                              #
+################################################################################
+
+Este documento describe en detalle la arquitectura, el flujo de funcionamiento y las
+consultas a la base de datos del sistema Sisten_Chaide. El objetivo es proporcionar
+una guía clara para poder replicar la lógica de negocio en futuros proyectos.
+
+
+================================================================================
+==                                                                            ==
+==                         1. DESCRIPCIÓN GENERAL                             ==
+==                                                                            ==
+================================================================================
+
+El sistema es una aplicación de gestión de logística y entregas diseñada para
+coordinar despachos de productos a clientes.
+
+---
+1.1. ARQUITECTURA
+---
+La solución se compone de tres proyectos principales:
+
+  - Sisten_Chaide: Una aplicación web ASP.NET MVC que funciona como el panel de
+    administración central (back-office). Desde aquí se gestionan usuarios,
+    perfiles, zonas y, lo más importante, se agendan las entregas.
+
+  - Api_Chaide: Una API web ASP.NET que expone funcionalidades clave para ser
+    consumidas por una aplicación cliente (probablemente móvil) usada por los
+    transportistas en campo.
+
+  - Resources: Una biblioteca de clases que contiene los archivos de recursos
+    (.resx) para la internacionalización y localización del texto de la
+    aplicación web.
+
+---
+1.2. BASES DE DATOS
+---
+El sistema se conecta a dos bases de datos distintas para cumplir sus funciones:
+
+  - SQL Server (chaide_db): Es la base de datos principal para la operativa del
+    día a día. Almacena toda la información transaccional como el agendamiento
+    de entregas, los usuarios del sistema, las zonas geográficas, etc.
+
+  - SAP HANA (CHP): Funciona como la base de datos maestra para los datos de
+    clientes y productos. Las consultas a esta base de datos son principalmente
+    de lectura para obtener la información necesaria al momento de agendar
+    una entrega.
+
+
+================================================================================
+==                                                                            ==
+==         2. FLUJO DETALLADO Y COMPLETO: AGENDAMIENTO DE UNA ENTREGA         ==
+==                                                                            ==
+================================================================================
+
+Este es el proceso completo que sigue un operador desde que abre la pantalla de
+agendamiento hasta que la entrega queda registrada en el sistema.
+
+---
+2.1. PASO 1: BÚSQUEDA DEL PEDIDO Y CARGA DE DATOS MAESTROS
+---
+  1. ACCIÓN DEL OPERADOR: El usuario navega a la pantalla `GenerateDelivery.cshtml`
+     e introduce un número de pedido en el campo correspondiente.
+
+  2. CONSULTA A SAP HANA: El sistema utiliza el número de pedido para realizar
+     dos consultas a la base de datos de SAP HANA:
+       - `ZBI_ConsultaCliente`: Para obtener toda la información del cliente
+         (nombre, dirección, ciudad, etc.).
+       - `ZSPConsultaItem`: Para obtener la lista completa de todos los productos
+         (items) que componen ese pedido.
+
+  3. RESULTADO EN PANTALLA: La información del cliente rellena los campos del
+     formulario y la lista de productos se muestra en una parrilla detallada.
+
+---
+2.2. PASO 2: SELECCIÓN DE PRODUCTOS (ENTREGA PARCIAL)
+---
+  1. ACCIÓN DEL OPERADOR: El usuario interactúa con la parrilla de productos.
+
+  2. FUNCIONALIDAD CLAVE: Aquí se manifiesta la capacidad de dividir pedidos.
+     Cada producto en la parrilla tiene:
+       - Una casilla de verificación para incluirlo o excluirlo de *esta* entrega.
+       - Un campo de cantidad para ajustar cuántas unidades se enviarán *en este
+         momento*.
+
+  3. RESULTADO EN PANTALLA: El operador define el alcance de la entrega actual,
+     seleccionando solo los productos que desea enviar. Por ejemplo, puede
+     seleccionar solo una cama y dejar un colchón para una entrega posterior.
+
+---
+2.3. PASO 3: UBICACIÓN GEOGRÁFICA Y ASIGNACIÓN DE TRANSPORTISTA
+---
+  1. ACCIÓN DEL OPERADOR: El usuario hace clic en el mapa interactivo para señalar
+     la ubicación exacta de la entrega.
+
+  2. CONSULTA DE ZONA (SQL Server): El sistema captura las coordenadas geográficas
+     y ejecuta el procedimiento `[web.get_zone_by_point]`. Esto determina a qué
+     zona de reparto predefinida pertenece la ubicación.
+
+  3. ASIGNACIÓN DE TRANSPORTISTA (SQL Server): El sistema ejecuta `[web.get_driver_by_point]`
+     para sugerir un conductor inicial. Inmediatamente después, consulta el
+     endpoint `Users/GetAllDriversZone` para poblar un menú desplegable con
+     TODOS los conductores disponibles en esa zona.
+
+  4. CAMBIO DE TRANSPORTISTA (Opcional): Si el conductor sugerido está ocupado,
+     el operador puede seleccionar cualquier otro conductor de la lista en el
+     menú desplegable. Al hacerlo, el calendario se refresca para mostrar la
+     disponibilidad del nuevo conductor seleccionado.
+
+  5. RESULTADO EN PANTALLA: Se muestra el nombre de la zona, el transportista
+     seleccionado (inicial o el nuevo) y su calendario de disponibilidad.
+
+---
+2.4. PASO 4: SELECCIÓN DE FECHA Y HORA (APLICACIÓN DE REGLAS DE NEGOCIO)
+---
+  1. ACCIÓN DEL OPERADOR: El usuario hace clic en un espacio disponible en el
+     calendario del transportista para seleccionar el día y la hora de inicio
+     de la entrega.
+
+  2. CÁLCULO DE DURACIÓN: El sistema no usa bloques de tiempo fijos. Calcula la
+     duración de la entrega (los posibles valores son 45, 90 o 135 minutos)
+     basándose en los productos seleccionados en el Paso 2, para lo cual
+     consulta el SP `[HorariosXmaterial]`.
+
+  3. VALIDACIONES AUTOMÁTICAS: En el momento de la selección, el sistema aplica
+     de forma estricta TODAS las siguientes reglas de negocio:
+       - REGLA 1 - HORARIO LABORAL: La selección debe estar dentro del horario
+         permitido:
+           - Lunes a Viernes: 9:45 AM - 7:30 PM.
+           - Sábados: 9:45 AM - 4:00 PM.
+           - Domingos: Prohibido.
+       - REGLA 2 - BLOQUEO DE ALMUERZO: La selección no puede ocupar la franja de
+         12:45 PM a 1:30 PM.
+       - REGLA 3 - FECHAS PASADAS: No se puede seleccionar una fecha/hora
+         anterior a la actual.
+       - REGLA 4 - FERIADOS: El sistema consulta el SP `[consulta_fecha_Feriados]`
+         y prohíbe la selección de cualquiera de las fechas devueltas.
+       - REGLA 5 - CONFLICTOS DE HORARIO (BACKEND): Se ejecuta el SP
+         `[zvalidate_schedule]` para confirmar que el transportista no tenga otra
+         entrega en la base de datos que entre en conflicto con el bloque de
+         tiempo seleccionado.
+       - REGLA 6 - SUPERPOSICIÓN DE EVENTOS (POR CONDUCTOR): Por defecto, el
+         calendario no permite agendar dos entregas en el mismo bloque de tiempo
+         **para el mismo conductor**. La restricción es individual, por lo que dos
+         conductores diferentes sí pueden tener entregas simultáneas. Sin embargo,
+         los usuarios con el permiso especial 'DELI0005' pueden ignorar esta
+         restricción y agendar múltiples entregas para un mismo conductor en el
+         mismo horario.
+
+  4. RESULTADO EN PANTALLA: Si todas las validaciones son exitosas, se crea un
+     evento visual en el calendario que representa la nueva entrega, mostrando
+     su duración calculada.
+
+---
+2.5. PASO 5: GUARDADO FINAL DE LA ENTREGA
+---
+  1. ACCIÓN DEL OPERADOR: El usuario hace clic en el botón "Guardar".
+
+  2. CONSTRUCCIÓN DE DATOS: El sistema recopila toda la información: datos del
+     cliente, la lista *parcial* de productos seleccionados, la zona, el
+     transportista, y las horas de inicio y fin validadas.
+
+  3. ESCRITURA EN BASE DE DATOS (SQL Server): Se ejecuta el procedimiento
+     `[web.delivery.add]`. Crucialmente, el parámetro `@list_items` (de tipo
+     Tabla) que se le envía contiene *únicamente* los productos seleccionados
+     en el Paso 2.
+
+  4. RESULTADO FINAL: Se crea un nuevo registro en la tabla `delivery` con un ID
+     único, formalizando la entrega agendada. El ciclo puede volver a empezar
+     para agendar los productos restantes del mismo pedido en una fecha
+     diferente.
+
+
+================================================================================
+==                                                                            ==
+==                        3. FLUJO DE LA API MÓVIL                            ==
+==                                                                            ==
+================================================================================
+
+La API es utilizada por los transportistas para gestionar sus entregas.
+
+---
+3.1. LOGIN DEL TRANSPORTISTA
+---
+  - El transportista introduce su usuario y contraseña en la aplicación móvil.
+  - La API recibe las credenciales y ejecuta `[admin.security.mobile_login]` en
+    SQL Server para validar al usuario.
+
+---
+3.2. CONSULTA DE ENTREGAS ASIGNADAS
+---
+  - Una vez logueado, la aplicación móvil solicita la lista de entregas del día.
+  - La API ejecuta `[web.mobile.get_delivery_by_date]` en SQL Server, pasándole
+    el ID del transportista y el rango de fechas.
+  - El SP devuelve la lista de entregas asignadas a ese transportista.
+
+---
+3.3. ACTUALIZACIÓN DE ESTADO DE ENTREGA
+---
+  - Cuando el transportista finaliza una entrega (o si no pudo realizarla),
+    actualiza su estado a través de la aplicación móvil.
+  - La app envía los detalles (ID de entrega, estado, observaciones, nombre del
+    receptor, firma en base64, coordenadas) a la API.
+  - La API ejecuta `[web.mobile.delivery.update]` en SQL Server para actualizar
+    el estado de la entrega y registrar toda la información de respaldo.
+
+
+================================================================================
+==                                                                            ==
+==           4. REFERENCIA COMPLETA DE CONSULTAS A BASE DE DATOS              ==
+==                                                                            ==
+================================================================================
+
+A continuación se presenta una lista exhaustiva de todos los procedimientos
+almacenados y consultas identificados en el código.
+
+--------------------------------------------------------------------------------
+--                             BASE DE DATOS: SAP HANA                        --
+--------------------------------------------------------------------------------
+
+  - PROCEDIMIENTO: ZBI_ConsultaCliente
+    - CONSULTA: CALL "SAPABAP1"."ZBI_ConsultaCliente" ('{orderId}');
+    - DESCRIPCIÓN: Obtiene los datos de un cliente a partir de un número de pedido.
+
+  - PROCEDIMIENTO: ZBI_ConsultaPedidoResiflex
+    - CONSULTA: CALL "SAPABAP1"."ZBI_ConsultaPedidoResiflex" ('{orderId}');
+    - DESCRIPCIÓN: Variante de la consulta de cliente, específica para "Resiflex".
+
+  - PROCEDIMIENTO: ZBI_ConsultaClienteResiflex
+    - CONSULTA: CALL "SAPABAP1"."ZBI_ConsultaClienteResiflex" ('{id}');
+    - DESCRIPCIÓN: Obtiene datos de cliente a partir de su cédula (RUC/CI),
+      específico para "Resiflex".
+
+  - PROCEDIMIENTO: ZSPConsultaItem
+    - CONSULTA: CALL "SAPABAP1"."ZSPConsultaItem" ('{orderId}');
+    - DESCRIPCIÓN: Obtiene los productos (items) de un número de pedido.
+
+  - PROCEDIMIENTO: ZBI_InsertaDatosSisten
+    - CONSULTA: CALL "SAPABAP1"."ZBI_InsertaDatosSisten" ('{pedidoSap}','{cedula}','{City}','{Address}','{ReferenceAddress}','{PhoneNumber}','{CellPhoneNumber}','{ClientName}','{email}','{lat}','{lng}');
+    - DESCRIPCIÓN: Inserta datos en una tabla de registros, parece ser para
+      clientes de "Resiflex".
+
+--------------------------------------------------------------------------------
+--                           BASE DE DATOS: SQL Server                        --
+--------------------------------------------------------------------------------
+
+  - PROCEDIMIENTO: [admin.profiles.add]
+    - CONSULTA: EXEC [admin.profiles.add] @name = '{profile.Name}', @development_function = {DataTable_con_IDs_de_funcion}
+    - DESCRIPCIÓN: Agrega un nuevo perfil de usuario con sus permisos asociados.
+
+  - PROCEDIMIENTO: [admin.profiles.delete]
+    - CONSULTA: EXEC [admin.profiles.delete] @id = {profileID}
+    - DESCRIPCIÓN: Elimina un perfil de usuario.
+
+  - PROCEDIMIENTO: [admin.profiles.get_all]
+    - CONSULTA: EXEC [admin.profiles.get_all] @keyword = '{sSearch}', @page = {page_number}, @page_size = {iDisplayLength}
+    - DESCRIPCIÓN: Obtiene una lista paginada de todos los perfiles.
+
+  - PROCEDIMIENTO: [admin.profiles.get_banned]
+    - CONSULTA: EXEC [admin.profiles.get_banned] @id = {profile_id}
+    - DESCRIPCIÓN: Obtiene una lista de elementos prohibidos para un perfil (uso no claro).
+
+  - PROCEDIMIENTO: [admin.profiles.get_one]
+    - CONSULTA: EXEC [admin.profiles.get_one] @id = {profileID}
+    - DESCRIPCIÓN: Obtiene la información detallada de un solo perfil y sus permisos.
+
+  - PROCEDIMIENTO: [admin.profiles.update]
+    - CONSULTA: EXEC [admin.profiles.update] @id = {profile.Id}, @name = '{profile.Name}', @development_function = {DataTable_con_IDs_de_funcion}
+    - DESCRIPCIÓN: Actualiza un perfil de usuario existente.
+
+  - PROCEDIMIENTO: [admin.security.mobile_login]
+    - CONSULTA: EXEC [admin.security.mobile_login] @username = '{LoginUser.Username}', @password = '{encryptedPassword}'
+    - DESCRIPCIÓN: Valida las credenciales de un usuario móvil (transportista).
+
+  - PROCEDIMIENTO: [admin.users.add]
+    - CONSULTA: EXEC [admin.users.add] @enabled = {user.Enabled}, @first_name = '{user.First_Name}', @last_name = '{user.Last_Name}', @username = '{user.User_Name}', @password = '{user.password}', @profiles = {DataTable_con_IDs_de_perfil}
+    - DESCRIPCIÓN: Agrega un nuevo usuario con sus perfiles asociados.
+
+  - PROCEDIMIENTO: [admin.users.assign_zone_is_new]
+    - CONSULTA: EXEC [admin.users.assign_zone_is_new] @user_id = {UserId}
+    - DESCRIPCIÓN: Verifica si un usuario ya tiene zonas asignadas.
+
+  - PROCEDIMIENTO: [admin.users.get]
+    - CONSULTA: EXEC [admin.users.get] @user_id = {currentUser.id}, @keyword = '{sSearch}', @page = {page_number}, @page_size = {iDisplayLength}
+    - DESCRIPCIÓN: Obtiene una lista paginada de usuarios.
+
+  - PROCEDIMIENTO: [admin.users.get_drivers]
+    - CONSULTA: EXEC [admin.users.get_drivers] @user_id = {currentUser.id}, @keyword = '{sSearch}', @page = {page_number}, @page_size = {iDisplayLength}
+    - DESCRIPCIÓN: Obtiene una lista paginada de usuarios que son transportistas.
+
+  - PROCEDIMIENTO: [admin.users.get_one]
+    - CONSULTA: EXEC [admin.users.get_one] @user_id = {userID}, @admin_user_id = {session.user.id}
+    - DESCRIPCIÓN: Obtiene la información detallada de un usuario y sus perfiles.
+
+  - PROCEDIMIENTO: [admin.users.get_zones_by_user1]
+    - CONSULTA: EXEC [admin.users.get_zones_by_user1] @user_id = {userID}, @admin_user_id = {session.user.id}
+    - DESCRIPCIÓN: Obtiene las zonas de un usuario y si están activas o asignadas.
+
+  - PROCEDIMIENTO: [admin.users.update]
+    - CONSULTA: EXEC [admin.users.update] @enabled = {user.Enabled}, @first_name = '{user.First_Name}', @last_name = '{user.Last_Name}', @username = '{user.User_Name}', @password = '{user.password}', @id = {user.Id}, @profiles = {DataTable_con_IDs_de_perfil}
+    - DESCRIPCIÓN: Actualiza la información de un usuario existente.
+
+  - PROCEDIMIENTO: [consulta_fecha_Feriados]
+    - CONSULTA: EXEC [consulta_fecha_Feriados]
+    - DESCRIPCIÓN: Devuelve una lista de fechas que son feriados.
+
+  - PROCEDIMIENTO: [HorariosXmaterial]
+    - CONSULTA: EXEC [HorariosXmaterial] @Codigo = '{codMaterial}'
+    - DESCRIPCIÓN: Devuelve los horarios disponibles basados en un código de material.
+
+  - PROCEDIMIENTO: [web.client.search]
+    - CONSULTA: EXEC [web.client.search] @client_name = '{name}'
+    - DESCRIPCIÓN: Busca clientes por nombre para autocompletado.
+
+  - PROCEDIMIENTO: [web.client_code_search]
+    - CONSULTA: EXEC [web.client_code_search] @client_code = '{name}'
+    - DESCRIPCIÓN: Busca clientes por código para autocompletado.
+
+  - PROCEDIMIENTO: [web.delivery.add]
+    - CONSULTA: EXEC [web.delivery.add] @order_number, @code_id, @client_name, @address, @phone_number, @province, @city, @latitude, @longitude, @status, @driver_id, @date_delivery, @hour_delivery, @zone_id, @deliveries, @reference_address, @EndDelivery, @cell_phone_number, @email, @seller_name, @user_id, @list_items = {DataTable_con_productos}
+    - DESCRIPCIÓN: Crea un nuevo registro de entrega con todos sus detalles.
+
+  - PROCEDIMIENTO: [web.delivery.delete]
+    - CONSULTA: EXEC [web.delivery.delete] @delivery_id = {deliveryId}
+    - DESCRIPCIÓN: Elimina un registro de entrega.
+
+  - PROCEDIMIENTO: [web.delivery.edit]
+    - CONSULTA: EXEC [web.delivery.edit] @DeliveryId, @order_number, @client_name, @address, @phone_number, @province, @city, @latitude, @longitude, @status, @driver_id, @date_delivery, @hour_delivery, @EndDelivery, @zone_id, @deliveries, @reference_address, @seller_name, @user_id, @cell_phone_number, @email, @list_items = {DataTable_con_productos}
+    - DESCRIPCIÓN: Modifica un registro de entrega existente.
+
+  - PROCEDIMIENTO: [web.delivery.get_deliveries]
+    - CONSULTA: EXEC [web.delivery.get_deliveries] @user_id = {currentUser.id}, @keyword = '{sSearch}', @page = {page_number}, @page_size = {iDisplayLength}, @zoneId = {zoneId}, @startDate = '{initDate}', @endDate = '{endDate}'
+    - DESCRIPCIÓN: Obtiene una lista paginada de entregas, con filtros.
+
+  - PROCEDIMIENTO: [web.delivery.get_deliveries_resiflex]
+    - CONSULTA: EXEC [web.delivery.get_deliveries_resiflex] @user_id = {currentUser.id}, @keyword = '{sSearch}', @page = {page_number}, @page_size = {iDisplayLength}, @zoneId = {zoneId}, @startDate = '{initDate}', @endDate = '{endDate}'
+    - DESCRIPCIÓN: Variante de la consulta anterior, específica para "Resiflex".
+
+  - PROCEDIMIENTO: [web.delivery_search]
+    - CONSULTA: EXEC [web.delivery_search] @order = '{name}'
+    - DESCRIPCIÓN: Busca entregas por número de pedido para autocompletado.
+
+  - PROCEDIMIENTO: [web.driver_search]
+    - CONSULTA: EXEC [web.driver_search] @driver_name = '{name}'
+    - DESCRIPCIÓN: Busca transportistas por nombre para autocompletado.
+
+  - PROCEDIMIENTO: [web.get_driver_by_point]
+    - CONSULTA: EXEC [web.get_driver_by_point] @zone_point = '{latitud,longitud}'
+    - DESCRIPCIÓN: Encuentra el transportista asignado a una zona que contiene un punto geográfico.
+
+  - PROCEDIMIENTO: [web.get_drivers]
+    - CONSULTA: EXEC [web.get_drivers] @zone_id = {zoneId}
+    - DESCRIPCIÓN: Obtiene todos los transportistas de una zona específica.
+
+  - PROCEDIMIENTO: [web.get_zone_by_point]
+    - CONSULTA: EXEC [web.get_zone_by_point] @zone_point = '{longitud} {latitud}'
+    - DESCRIPCIÓN: Encuentra la zona que contiene un punto geográfico específico.
+
+  - PROCEDIMIENTO: [web.get_zones]
+    - CONSULTA: EXEC [web.get_zones]
+    - DESCRIPCIÓN: Obtiene una lista de todas las zonas.
+
+  - PROCEDIMIENTO: [web.itinerary.get_deliveries_1]
+    - CONSULTA: EXEC [web.itinerary.get_deliveries_1] @user_id = {userId}, @zone_id = {zoneId}, @order_id = {orderId}, @driver_id = {driverId}, @client = '{clientName}', @date_from = '{fecha}'
+    - DESCRIPCIÓN: Obtiene las entregas para ser mostradas en el calendario/itinerario.
+
+  - PROCEDIMIENTO: [web.itinerary.get_delivery_info]
+    - CONSULTA: EXEC [web.itinerary.get_delivery_info] @delivery_id = '{orderId}'
+    - DESCRIPCIÓN: Obtiene toda la información detallada de una entrega específica.
+
+  - PROCEDIMIENTO: [web.itinerary.get_delivery_info_dispatched]
+    - CONSULTA: EXEC [web.itinerary.get_delivery_info_dispatched] @delivery_id = '{orderId}'
+    - DESCRIPCIÓN: Obtiene la información de una entrega que ya ha sido despachada.
+
+  - PROCEDIMIENTO: [web.mobile.delivery.update]
+    - CONSULTA: EXEC [web.mobile.delivery.update] @deliveryId, @observations, @statusId, @questions, @receptorName, @dateHourDelivery, @lat, @lng, @signature = {imageData}, @list_items = {DataTable_con_estados}
+    - DESCRIPCIÓN: Actualiza el estado de una entrega desde la API móvil.
+
+  - PROCEDIMIENTO: [web.mobile.get_delivery_by_date]
+    - CONSULTA: EXEC [web.mobile.get_delivery_by_date] @id = {IdTransportista}, @date = '{Fecha}', @end_date = '{FechaFin}'
+    - DESCRIPCIÓN: Obtiene las entregas de un transportista en un rango de fechas.
+
+  - PROCEDIMIENTO: [web.user.search]
+    - CONSULTA: EXEC [web.user.search] @user_name = '{name}'
+    - DESCRIPCIÓN: Busca usuarios por nombre para autocompletado.
+
+  - PROCEDIMIENTO: [web.user_zone.update1]
+    - CONSULTA: EXEC [web.user_zone.update1] @User_id = {fuser.user.Id}, @User_id_modify = {session.user.id}, @ModificationDate = '{DateTime.Now}', @user_zones_add = {DataTable_con_IDs_de_zona}
+    - DESCRIPCIÓN: Asigna o actualiza las zonas para un usuario específico.
+
+  - PROCEDIMIENTO: [web.zone.add]
+    - CONSULTA: EXEC [web.zone.add] @name = '{zone.name}', @polygon = '{zone.Polygon}', @user_id = {userId}, @creation_date = '{DateTime.Now}'
+    - DESCRIPCIÓN: Crea una nueva zona geográfica.
+
+  - PROCEDIMIENTO: [web.zone.delete]
+    - CONSULTA: EXEC [web.zone.delete] @zone_id = {zoneId}
+    - DESCRIPCIÓN: Elimina una zona.
+
+  - PROCEDIMIENTO: [web.zone.get_all]
+    - CONSULTA: EXEC [web.zone.get_all] @keyword = '{sSearch}', @page = {page_number}, @page_size = {iDisplayLength}
+    - DESCRIPCIÓN: Obtiene una lista paginada de todas las zonas.
+
+  - PROCEDIMIENTO: [web.zone.get_one]
+    - CONSULTA: EXEC [web.zone.get_one] @id = {id}
+    - DESCRIPCIÓN: Obtiene la información detallada de una sola zona.
+
+  - PROCEDIMIENTO: [web.zone.update]
+    - CONSULTA: EXEC [web.zone.update] @id = {zone.Id}, @name = '{zone.name}', @polygon = '{zone.Polygon}', @user_id = {userId}, @modification_date = '{DateTime.Now}'
+    - DESCRIPCIÓN: Actualiza una zona existente.
+
+  - PROCEDIMIENTO: [web.zone_search]
+    - CONSULTA: EXEC [web.zone_search] @zone_name = '{name}'
+    - DESCRIPCIÓN: Busca zonas por nombre para autocompletado.
+
+  - PROCEDIMIENTO: [zvalidate_schedule]
+    - CONSULTA: EXEC [zvalidate_schedule] @ZonaId = {zoneId}, @DateHourDelivery = '{date}'
+    - DESCRIPCIÓN: Valida si un transportista tiene disponible un horario específico en una zona.
+
+
+================================================================================
+==                                                                            ==
+==                5. EJEMPLO DETALLADO: AGREGAR NUEVA ENTREGA                 ==
+==                                                                            ==
+================================================================================
+
+Esta sección detalla, paso a paso, cómo los datos fluyen desde la aplicación
+hasta la base de datos al agendar una nueva entrega. Usamos como ejemplo la
+ejecución del procedimiento [web.delivery.add].
+
+Este caso es importante porque ilustra cómo se envían tanto datos simples
+(texto, números) como datos complejos (una lista de productos).
+
+---
+5.1. PASO 1: EL CONTROLADOR RECIBE LOS DATOS
+---
+El `DeliveryController` recibe toda la información del formulario en un objeto
+de C# (`GenerateDelivery`). Este objeto contiene todos los detalles necesarios.
+
+---
+5.2. PASO 2: EL PROVIDER CONSTRUYE LA CONSULTA
+---
+El controlador envía el objeto al método `AddDelivery` en `DeliveryProvider.cs`.
+Aquí es donde se traduce la información a una consulta de base de datos.
+
+  A) PARÁMETROS SIMPLES:
+  Cada dato simple (como el nombre del cliente o la fecha) se añade como un
+  `SqlParameter` individual.
+
+  Ejemplo conceptual en C#:
+  ```csharp
+  SqlCommand cmd = new SqlCommand("[web.delivery.add]", _connection);
+  cmd.CommandType = CommandType.StoredProcedure;
+
+  cmd.Parameters.AddWithValue("@order_number", "1234567");
+  cmd.Parameters.AddWithValue("@client_name", "Juan Pérez");
+  cmd.Parameters.AddWithValue("@latitude", -0.210537);
+  cmd.Parameters.AddWithValue("@driver_id", 101);
+  cmd.Parameters.AddWithValue("@hour_delivery", new DateTime(2025, 8, 22, 10, 30, 0));
+  // ... etc.
+  ```
+
+  B) PARÁMETRO COMPLEJO (LISTA DE PRODUCTOS):
+  Para enviar una lista, C# primero la convierte en un `DataTable` en memoria.
+  Luego, este `DataTable` se envía como un tipo especial de parámetro conocido
+  como "Parámetro con Valor de Tabla" (Table-Valued Parameter).
+
+  Ejemplo conceptual en C#:
+  ```csharp
+  // 1. Se crea un DataTable para los productos
+  DataTable items = new DataTable();
+  items.Columns.Add("ProductCode", typeof(string));
+  items.Columns.Add("ProductName", typeof(string));
+  items.Columns.Add("quantity", typeof(int));
+  // ... (otras columnas)
+
+  // 2. Se llena con los datos de los productos
+  items.Rows.Add("PROD-001", "Colchón Ortopédico", 1);
+  items.Rows.Add("PROD-002", "Almohada de Plumas", 2);
+
+  // 3. Se añade el DataTable como un parámetro de tipo "Structured"
+  SqlParameter listItemsParam = new SqlParameter();
+  listItemsParam.ParameterName = "@list_items";
+  listItemsParam.SqlDbType = SqlDbType.Structured; // <-- La clave
+  listItemsParam.Value = items;
+
+  cmd.Parameters.Add(listItemsParam);
+  ```
+
+---
+5.3. PASO 3: EJECUCIÓN DE PRUEBA EN SQL SERVER
+---
+Para que SQL Server acepte el `DataTable` de C#, debe existir un "Tipo de Tabla
+Definido por el Usuario" (User-Defined Table Type) con una estructura idéntica.
+
+Suponiendo que existe un tipo llamado `dbo.ItemProductType`, así es como se
+simularía la llamada completa directamente en SQL para una prueba:
+
+  ```sql
+  -- 1. Declarar una variable de tabla del tipo personalizado.
+  --    (Este tipo, dbo.ItemProductType, debe existir en la BD).
+  DECLARE @ProductosParaEnviar AS dbo.ItemProductType;
+
+  -- 2. Insertar los datos de prueba en la variable de tabla.
+  INSERT INTO @ProductosParaEnviar (ProductCode, ProductName, quantity, Dispatched)
+  VALUES
+  ('PROD-001', 'Colchón Ortopédico', 1, 1),
+  ('PROD-002', 'Almohada de Plumas', 2, 1);
+
+  -- 3. Ejecutar el procedimiento, pasando la variable de tabla como parámetro.
+  EXEC [web.delivery.add]
+      @order_number = '1234567',
+      @client_name = 'Juan Pérez',
+      @address = 'Av. Siempre Viva 742',
+      @latitude = -0.210537,
+      @longitude = -78.488236,
+      @driver_id = 101,
+      @hour_delivery = '2025-08-22 10:30:00',
+      @list_items = @ProductosParaEnviar,
+      -- ... y el resto de los parámetros que requiera el SP.
+      @user_id = 1;
+  ```

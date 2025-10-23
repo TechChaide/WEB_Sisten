@@ -1,0 +1,49 @@
+﻿@using www
+@using www.Helpers
+@using Sisten_Chaide.Resources.Labels
+@using Sisten_Chaide.Models
+
+@model Dictionary<string, object>
+
+@{
+    ViewBag.Title = "Zonas";
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+    ViewBag.PageTitle = @Labels.Zone;
+
+}
+
+
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/datatable/jquery.dataTables.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/toggle/bootstrap-switch.css")" />
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/datatable/jquery.dataTables.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/datatable/dataTables.bootstrap.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/toggle/bootstrap-switch.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/labels.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/web.zones.js")"></script>
+
+@{
+    Message m = TempData["Message"] as Message;
+    if (m != null)
+    {
+        @Html.Partial("_Message", m);
+    }
+}
+
+@if (ApplicationContext.LoggedUser.HasPermission("ZONE0002"))
+{
+    <div class="form-group">
+        <a class="btn btn-primary btn-sm" href="@Url.Action("NewZone")">@Labels.NewZone</a>
+    </div>
+}
+
+<table class="table table-bordered table-striped table-condensed" id="grid-zones">
+    <thead>
+        <tr>
+            <th>@Labels.Id</th>
+            <th>@Labels.Name</th>
+            <th>@Labels.Date</th>
+            <th></th>
+        </tr>
+    </thead>
+</table>

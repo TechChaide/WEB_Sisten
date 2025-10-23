@@ -1,0 +1,259 @@
+﻿@using Resources
+@using Sisten_Chaide.Helpers
+@using Sisten_Chaide.Resources.Labels
+@using Sisten_Chaide.Models
+
+@model Sisten_Chaide.Models.GenerateDelivery
+@{
+    ViewBag.Title = "Centro Monitoreo";
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+    ViewBag.PageTitle = @Labels.TitleDelivery;
+}
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery-1.7.1.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery-ui-1.10.1.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/labels.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/web.delivery_itinerary.js")"></script>
+<script src="/Scripts/plugins/datepicker/jquery.ui.datepicker-en.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/calendar/moment.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/calendar/fullcalendar.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/calendar/es.js")"></script>
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/datatable/jquery.dataTables.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/datatable/dataTables.bootstrap.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/toggle/bootstrap-switch.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/select2/es.js")"></script>
+
+<script type='text/javascript' src='http://cdn.leafletjs.com/leaflet-0.7.5/leaflet.js?2'></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/Maps/Leaflet-Draw/leaflet.draw-src.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/Maps/LeafLet OMS/Control.OSMGeocoder.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/Maps/Leaflet/easy-button.js")"></script>
+
+
+
+
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/toggle/bootstrap-switch.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/calendar/fullcalendar.min.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/datatable/jquery.dataTables.css")" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/Leaflet/leaflet.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/Leaflet-Draw/leaflet.draw.css")" />
+<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/Leaflet/easy-button.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/LeafLet OMS/Control.OSMGeocoder.css")" />
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/datatable/jquery.dataTables.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/toggle/bootstrap-switch.css")" />
+
+
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery-ui-1.10.1.min.js")"></script>
+@*<script type="text/javascript" src="/Scripts/plugins/datepicker/jquery.ui.datepicker-en.min.js"></script>*@
+
+
+
+
+
+@{
+    Message msg = TempData["Message"] as Message;
+    if (msg != null)
+    {
+        @Html.Partial("_Message", msg);
+    }
+}
+
+<style>
+    #map {
+        position: relative;
+        height: 500px;
+    }
+
+    .fc-day-grid-event, .fc-time-grid-event {
+        cursor: pointer;
+    }
+
+    .select2-container .select2-selection {
+        background: #edeef0;
+        font-size: 14px !important;
+        color: #4d4d4d !important;
+    }
+
+    select2-selection__choice {
+        background-color: #ffffff;
+    }
+
+    .hasDatepicker {
+        background: #edeef0;
+        font-size: 14px !important;
+        color: #4d4d4d !important;
+    }
+</style>
+
+<div class="col-sm-12 clients">
+    <div class="panel panel-inverse">
+        <div class="panel-heading">
+            <h4>
+                @Labels.DeliverySchedule
+            </h4>
+        </div>
+
+        <div class="panel-body">
+            @*<div class="alert alert-warning alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <strong>Warning!</strong> Better check yourself, you're not looking too good.
+                </div>*@
+            <div class="row ui-tabs">
+                <div class="col-md-4">
+                    <select class="zone_filter form-control" multiple="multiple" style="width: 100%"></select>
+                </div>
+                <div class="col-md-4">
+                    <select class="user_filter form-control" multiple="multiple" style="width: 100%"></select>
+                </div>
+                <div class="col-md-4">
+                    <select class="order_filter" multiple="multiple" style="width: 100%"></select>
+                </div>
+            </div>
+            <div class="row ui-tabs">
+                <div class="col-md-4">
+                    <select class="client_name_filter" multiple="multiple" style="width: 100%"></select>
+                </div>
+                <div class="col-md-4">
+                    <select class="driver_filter" multiple="multiple" style="width: 100%"></select>
+                </div>
+            </div>
+            <div class="row ui-tabs">
+                <label class="control-label col-md-2">@Labels.StartDate:</label>
+                <div class="col-md-4">
+                    <input type="text" name="initDateClient" class="input-md form-control datepicker" data-hidden="#initDate" />
+                </div>
+                @*<label class="control-label col-md-2 ">@Labels.EndDate:</label>
+                    <div class="col-md-4">
+                        <input type="text" name="endDateClient" class="input-md form-control datepicker" data-hidden="#endDate" />
+                    </div>*@
+                <div class="col-md-4">
+                    <input type="button" class="btn btn-primary" value="@Labels.Search" id="searchDelivery" />
+                </div>
+            </div>
+            <div id='calendar'></div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-pull-4">
+    <div class="panel panel-inverse">
+        <div class="panel-heading">
+            <h4>@Labels.ClientInformation</h4>
+        </div>
+        <div class="panel-body">
+            <div class="form-line">
+                <label class="control-label col-md-2">@Labels.Name </label>
+                <div class="col-md-4">
+                    @Html.TextBoxFor(m => m.client.ClientName, new { @class = "form-control input-md", @readonly = "readonly" })
+                </div>
+                <label class="control-label col-md-2">@Labels.Phone_number </label>
+                <div class="col-md-4">
+                    @Html.TextBoxFor(m => m.client.PhoneNumber, new { @class = "form-control input-md", @readonly = "readonly" })
+                </div>
+                <label class="control-label col-md-2">@Labels.City </label>
+                <div class="col-md-4">
+                    @Html.TextBoxFor(m => m.client.City, new { @class = "form-control input-md", @readonly = "readonly" })
+                </div>
+                <label class="control-label col-md-2">@Labels.Address </label>
+                <div class="col-md-4">
+                    @Html.TextBoxFor(m => m.client.Address, new { @class = "form-control input-md", @readonly = "readonly" })
+                </div>
+                <label class="control-label col-md-2">@Labels.Email </label>
+                <div class="col-md-4">
+                    @Html.TextBoxFor(m => m.client.email, new { @class = "form-control input-md", @readonly = "readonly" })
+                </div>
+                <label class="control-label col-md-2">@Labels.MobilePhone </label>
+                <div class="col-md-4">
+                    @Html.TextBoxFor(m => m.client.CellPhoneNumber, new { @class = "form-control input-md", @readonly = "readonly" })
+                </div>
+                <label class="control-label col-md-2">@Labels.SellerName </label>
+                <div class="col-md-4">
+                    @Html.TextBoxFor(m => m.client.SellerName, new { @class = "form-control input-md", @readonly = "readonly" })
+                </div>
+                <label class="control-label col-md-2">@Labels.DeliverNumber </label>
+                <div class="col-md-4">
+                    @Html.TextBoxFor(m => m.Deliveries, new { @class = "form-control input-md", @readonly = "readonly" })
+                </div>
+                <label class="control-label col-md-2">@Labels.AddressReference </label>
+                <div class="col-md-4">
+                    @Html.TextAreaFor(m => m.ReferenceAddress, new { @class = "form-control input-md", @readonly = "readonly" })
+                </div>
+                <label class="control-label col-sm-2">@Labels.OrderNumber </label>
+                <div class="col-sm-4">
+                    @Html.TextBoxFor(m => m.OrderNumber, new { @class = "form-control input-sm", @readonly = "readonly" })
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="panel panel-inverse">
+        <div class="panel-heading">
+            <h4>@Labels.ItemsDetails</h4>
+        </div>
+        <div class="panel-body">
+            <div class="form-group">
+                <table class="table table-bordered table-striped table-condensed" id="grid-users">
+                    <thead>
+                        <tr>
+                            <th>@Labels.OrderNumber</th>
+                            <th>@Labels.Code</th>
+                            <th>@Labels.Name</th>
+                            <th>@Labels.Quantity</th>
+                            <th>@Labels.State</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="panel panel-inverse">
+        <div class="panel-heading">
+            <h4>@Labels.DeliveryAddress</h4>
+        </div>
+        <div class="panel-body" id="map">
+        </div>
+    </div>
+
+    <div class="panel panel-inverse">
+        <div class="panel-heading">
+            <h4>@Labels.DeliveryInformation</h4>
+        </div>
+        <div class="panel-body" id="ZoneInformation">
+            <div class="form-group">
+                <label class="control-label col-md-2">@Labels.DriverFirstName </label>
+                <div class="col-md-4">
+                    @Html.TextBoxFor(m => m.driver.user.First_Name, new { @class = "form-control input-md", @readonly = "readonly" })
+                </div>
+                <label class="control-label col-md-2">@Labels.DriverLastName </label>
+                <div class="col-md-4">
+                    @Html.TextBoxFor(m => m.driver.user.Last_Name, new { @class = "form-control input-md", @readonly = "readonly" })
+                </div>
+                @*<label class="control-label col-md-2">@Labels.ZoneName </label>
+                    <div class="col-md-4">
+                        @Html.TextBoxFor(m => m.driver.zone.name, new { @class = "form-control input-md", @readonly = "readonly" })
+                    </div>
+                    <label class="control-label col-md-2">@Labels.ZoneId </label>
+                    <div class="col-md-4">
+                        @Html.TextBoxFor(m => m.driver.zone.Id, new { @class = "form-control input-md", @readonly = "readonly" })
+                    </div>*@
+                <label class="control-label col-md-2">@Labels.ReceptorName </label>
+                <div class="col-md-4">
+                    @Html.TextBoxFor(m => m.ReceptorName, new { @class = "form-control input-md", @readonly = "readonly" })
+                </div>
+                <label class="control-label col-md-2">@Labels.DateHourDeliveryReception </label>
+                <div class="col-md-4">
+                    @Html.TextBoxFor(m => m.StrDateHourDeliveryReception, new { @class = "form-control input-md", @readonly = "readonly" })
+                </div>
+                <label class="control-label col-sm-2">@Labels.DeliveryObservations </label>
+                <div class="col-sm-4">
+                    @Html.TextAreaFor(m => m.Observations, new { @class = "form-control input-sm", @readonly = "readonly" })
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,126 @@
+﻿@using Sisten_Chaide
+@using Sisten_Chaide.Helpers
+
+@using Newtonsoft.Json
+
+@using Sisten_Chaide.Resources.Labels
+@model Sisten_Chaide.Models.FormUser
+
+@{
+    ViewBag.Title = string.Format("{0}" , ViewBag.PageTitle);
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+    ViewBag.PageTitle = ViewBag.PageTitle;
+}
+
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.unobtrusive.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.custom.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/labels.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/inputmask/jquery.inputmask.bundle.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/web.users.js")"></script>
+@{
+    Message msg = TempData["Message"] as Message;
+    if (msg != null)
+    {
+        @Html.Partial("_Message" , msg);
+    }
+}
+
+<div class="col-sm-12 clients">
+    @using (Html.BeginForm("Edit" , "Users" , FormMethod.Post , new { @class = "form-horizontal" }))
+    {
+        @Html.HiddenFor(m => m.user.Id)
+        @Html.HiddenFor(m => m.is_new)
+        @Html.HiddenFor(m => m.users_name)
+
+        <div class="panel panel-inverse">
+            <div class="panel-heading">
+                <h4>@Labels.UserInformation</h4>
+            </div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <div class="required-fields pull-right">@Labels.RequiredFields</div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-sm-2">@Labels.First_name </label>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(m => m.user.First_Name , new { @class = "form-control input-sm" })
+                        @Html.ValidationMessageFor(m => m.user.First_Name)
+                    </div>
+                    <label class="control-label col-sm-2">@Labels.Last_name </label>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(m => m.user.Last_Name , new { @class = "form-control input-sm" })
+                        @Html.ValidationMessageFor(m => m.user.Last_Name)
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-sm-2">@Labels.Username </label>
+                    <div class="col-sm-4">@Html.TextBoxFor(m => m.user.User_Name , new { @class = "form-control input-sm" })</div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-sm-2">@Labels.Password </label>
+                    @if (Model.is_new)
+                    {
+                        <div class="col-sm-4">@Html.PasswordFor(m => m.user.password , new { @class = "form-control input-sm" })</div>
+                        <label class="control-label col-sm-2">@Labels.ConfirmPassword </label>
+                        <div class="col-sm-4">
+                            @Html.PasswordFor(m => m.user.confirm_password , new { @class = "form-control input-sm" })
+                            @Html.ValidationMessageFor(m => m.user.confirm_password)
+                        </div>
+                    } else
+                    {
+                        <div class="col-sm-4">@Html.PasswordFor(m => m.user.password_edit , new { @class = "form-control input-sm" })</div>
+                        <label class="control-label col-sm-2">@Labels.ConfirmPassword </label>
+                        <div class="col-sm-4">
+                            @Html.PasswordFor(m => m.user.confirm_password_edit , new { @class = "form-control input-sm" })
+                            @Html.ValidationMessageFor(m => m.user.confirm_password_edit)
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+        </div>
+
+        if (ApplicationContext.LoggedUser.is_super)
+        {
+
+        } else
+        {
+
+        }
+
+
+        <div class="panel panel-orange">
+            <div class="panel-heading">
+                <h4>@Labels.ProfilesAvailable</h4>
+            </div>
+            <div class="panel-body">
+                <div class="col-sm-4">
+                    @Html.HiddenFor(m => m.list_perfils)
+                    <ul class="perfil-ul">
+                        @for (int j = 0 ; j < Model.user.list_profile.Count ; j++)
+                        {
+                            <li>
+                                <div>
+                                    @Html.CheckBoxFor(m => m.user.list_profile[j].active , new { @class = "group-feature-selector" , data_profile = Model.user.list_profile[j].Id , data_val = false })
+                                    @Model.user.list_profile[j].Name
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <p class="btn-group pull-right">
+
+            <a class="btn btn-default" href="@Url.Action("Index")">@Labels.Cancel</a>
+            <input type="submit" class="btn btn-primary" value="@Labels.Save" />
+        </p>
+
+    }
+
+</div>

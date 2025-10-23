@@ -1,0 +1,54 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+bin/
+obj/
+
+# NuGet
+*.nupkg
+packages/
+# Uncomment if you have NuGet Package Restore enabled
+#!packages/repositories.config
+
+# IIS Express
+*.vspscc
+*.vssscc
+*.dbmdl
+*.dbproj.schemaview
+*.pdb
+*.cache
+*.log
+*.vspscc
+*.vssscc
+
+# Web publish
+*.Publish.xml
+*.pubxml
+*.publishproj
+
+# Others
+_ReSharper*/
+*.resharper
+*.DotSettings.user
+*.DotSettings
+TestResult*/
+*.TestResults
+*.coverage
+*.coveragexml
+
+# OS generated files
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Rider
+.idea/
+*.iml
+
+# Documentation
+!docs/

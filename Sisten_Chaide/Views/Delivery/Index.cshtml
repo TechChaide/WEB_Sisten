@@ -1,0 +1,98 @@
+﻿@using www
+@using www.Helpers
+@using Sisten_Chaide.Resources.Labels
+@using Sisten_Chaide.Models
+
+@model Dictionary<string , object>
+
+@{
+    ViewBag.Title = "Entregas";
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+    ViewBag.PageTitle = @Labels.GenerateDeliveries;
+
+}
+
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery-ui-1.10.1.min.js")"></script>
+<script src="/Scripts/plugins/datepicker/jquery.ui.datepicker-en.min.js"></script>
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css">
+@*<link rel="stylesheet" src="@Url.Content("~/Scripts/plugins/datepicker/daterangepicker-bs3.css")">*@
+
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/datatable10/css/jquery.dataTables.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/datatable10/css/dataTables.bootstrap.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/toggle/bootstrap-switch.css")" />
+
+@*<link rel="stylesheet" href="@Url.Content("~/Styles/app/jquery-ui-1.9.2.min.css")" />*@
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/datatable10/js/jquery.dataTables.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/datatable10/js/dataTables.bootstrap.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/toggle/bootstrap-switch.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/labels.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/web.delivery.js")"></script>
+
+@{
+    Message m = TempData["Message"] as Message;
+    if (m != null)
+    {
+        @Html.Partial("_Message" , m);
+    }
+}
+
+@if (ApplicationContext.LoggedUser.HasPermission("DELI0002"))
+{
+    <div class="form-group">
+        <a class="btn btn-primary btn-sm" href="@Url.Action("GenerateDelivery")">@Labels.GenerateDelivery</a>
+    </div>
+}
+<div class="col-sm-12">
+    <div class="panel panel-orange">
+        <div class="panel-heading">
+            <h4>@Labels.DeliveryList</h4>
+        </div>
+        <div class="panel-body">
+            <input type="hidden" id="initDate" name="initDate" />
+            <input type="hidden" id="endDate" name="endDate" />
+            <div class="row">
+              <div class="form-group">
+                <div style="display:inline-block; vertical-align:middle;">
+                  <label class="control-label text-right">@Labels.StartDate:</label>
+                </div>
+                <div style="display:inline-block; vertical-align:middle; width:130px;">
+                  <input type="text" name="initDateClient" class="input-sm form-control datepicker" data-hidden="#initDate" class="width:100px" />
+                </div>
+                <div style="display:inline-block; vertical-align:middle; margin-left:20px;">
+                  <label class="control-label text-right">@Labels.EndDate:</label>
+                </div>
+                <div style="display:inline-block; vertical-align:middle; width:130px;">
+                  <input type="text" name="endDateClient" class="input-sm form-control datepicker" data-hidden="#endDate" />
+                </div>
+                <div style="display:inline-block; vertical-align:middle; margin-left:20px;">
+                  <label class="control-label text-right">@Labels.Zone:</label>
+                </div>
+                <div style="display:inline-block; vertical-align:middle; width:200px;">
+                  <select name="zone" class="input-group form-control" id="zoneName"></select>
+                </div>
+                <div style="display:inline-block; vertical-align:middle; margin-left:20px;">
+                  <input type="button" class="btn btn-primary" value="@Labels.Search" id="searchDelivery" />
+                </div>
+              </div>
+            </div>
+            <table class="table table-bordered table-striped table-condensed" id="grid-orders">
+                <thead>
+                    <tr>
+                        <th>@Labels.DeliveryNumber</th>
+                        <th>@Labels.OrderNumber</th>
+                        <th>@Labels.DriverName</th>
+                        <th>@Labels.HourDelivery</th>
+                        <th>@Labels.ClientName</th>
+                        <th>@Labels.ZoneName</th>
+                        <th></th>
+                    </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+
+

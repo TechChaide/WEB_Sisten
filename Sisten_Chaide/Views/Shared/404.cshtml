@@ -1,0 +1,12 @@
+﻿@using www
+
+@{
+	ViewBag.Title = string.Format("{0}, {1}", ApplicationContext.LoggedUser, "Access Denied");
+	Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+
+<p class="text-center">
+	<span class="text-info" style="font-size:4em">Uh-oh</span>
+</p>
+<p class="text-center">The requested page doesn't exist into the system</p>
+<p class="text-center">Call your administrator for better assistance</p>

@@ -1,0 +1,52 @@
+﻿@using www
+@using www.Helpers
+@using Sisten_Chaide.Resources.Labels
+@using Sisten_Chaide.Models
+
+@model Dictionary<string , object>
+
+@{
+    ViewBag.Title = "Asignar Zonas";
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+    ViewBag.PageTitle = @Labels.AssingZone;
+
+}
+
+
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/datatable/jquery.dataTables.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/toggle/bootstrap-switch.css")" />
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/datatable/jquery.dataTables.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/datatable/dataTables.bootstrap.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/toggle/bootstrap-switch.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/labels.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/web.zone_assing_driver.js")"></script>
+
+@{
+    Message m = TempData["Message"] as Message;
+    if (m != null)
+    {
+        @Html.Partial("_Message" , m);
+    }
+}
+
+@if (ApplicationContext.LoggedUser.HasPermission("USER0005"))
+{
+    @*<div class="form-group">
+        <a class="btn btn-primary btn-sm" href="@Url.Action("New")">@Labels.NewDriver</a>
+    </div>*@
+}
+
+<table class="table table-bordered table-striped table-condensed" id="grid-users">
+    <thead>
+        <tr>
+            <th>@Labels.First_name</th>
+            <th>@Labels.Last_name</th>
+            <th>@Labels.Username</th>
+            <th></th>
+        </tr>
+    </thead>
+</table>
+
+
+
