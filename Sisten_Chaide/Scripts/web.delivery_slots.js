@@ -517,6 +517,7 @@ $(document).ready(function () {
         if (currentZoneId > 0 && currentZoneId !== lastZoneId) {
             console.log('%c[SLOTS] Zona detectada: ' + currentZoneId, 'color: green; font-weight: bold;');
             lastZoneId = currentZoneId;
+            clearInterval(zoneCheckInterval);
             __lbs.delivery_slots.loadAvailableSlots(currentZoneId);
         }
     }, 500);
