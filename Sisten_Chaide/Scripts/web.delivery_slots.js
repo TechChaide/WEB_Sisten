@@ -275,7 +275,8 @@ __lbs.delivery_slots = (function () {
                     bodyHtml += '<td id="' + cellId + '" class="' + cellClass + '" style="' + cellStyle + '"';
                     console.log('[DEBUG] cellContent:', cellContent);
                     if (slot && slot.AvailableDriverCount > 0) {
-                        bodyHtml += ' data-datekey="' + dateKey + '" data-hour="' + hour + '" data-driverid="' + (slot.AssignedDriverId || '') + '" data-drivername="' + (slot.AssignedDriverName || 'Conductor asignado') + '"';
+                        var endHour = formatSlotHour(slot.HourEnd || slot.HourStart);
+                        bodyHtml += ' data-datekey="' + dateKey + '" data-hour="' + hour + '" data-hourendstr="' + endHour + '" data-driverid="' + (slot.AssignedDriverId || '') + '" data-drivername="' + (slot.AssignedDriverName || 'Conductor asignado') + '"';
                     }
                     bodyHtml += '>' + cellContent + '</td>';
                 }
@@ -298,11 +299,12 @@ __lbs.delivery_slots = (function () {
                 console.log('[DEBUG] slot-available click:', this);
                 var $cell = $(this);
                 var dateKey = $cell.attr('data-datekey');
-                var hour = $cell.attr('data-hour');
+                var hourStart = $cell.attr('data-hour');
+                var hourEnd = $cell.attr('data-hourendstr') || hourStart;
                 var driverId = $cell.attr('data-driverid');
                 var driverName = $cell.attr('data-drivername');
 
-                log('INFO', 'Slot seleccionado por el usuario', { dateKey: dateKey, hour: hour, driverId: driverId, driverName: driverName });
+                log('INFO', 'Slot seleccionado por el usuario', { dateKey: dateKey, hourStart: hourStart, hourEnd: hourEnd, driverId: driverId, driverName: driverName });
 
                 if ($cell.hasClass('selected')) {
                     $cell.removeClass('selected').css({
@@ -331,8 +333,8 @@ __lbs.delivery_slots = (function () {
                 $('#calendarButtons').hide();
                 $('#confirmSchedule').hide();
 
-                console.log('[DEBUG] slot seleccionado:', { dateKey, hour, driverId, driverName });
-                selectSlot(dateKey, hour, hour, driverId, driverName);
+                console.log('[DEBUG] slot seleccionado:', { dateKey, hourStart, hourEnd, driverId, driverName });
+                selectSlot(dateKey, hourStart, hourEnd, driverId, driverName);
             });
         }
 
