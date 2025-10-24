@@ -1,6 +1,16 @@
-# Sisten Chaide Delivery Management
 
-## Descripción
+# Sisten Chaide Delivery Management (Versión 2.0)
+
+
+**Versión 2.0**
+
+Esta versión incluye:
+- Corrección crítica en la lógica de agendamiento: los slots ocupados ya no aparecen como disponibles gracias a la validación y registro correcto de la hora de finalización (`EndDelivery`).
+- Solución al bucle infinito de detección de zona en el calendario.
+- Mejoras en la visualización y selección de slots.
+- Validación robusta de disponibilidad y asignación automática de conductores.
+- Integración total con la base de datos de pruebas (`chaide_db_test`).
+- Panel de administración para usuarios, zonas, perfiles y pedidos.
 
 Este proyecto es una aplicación web ASP.NET MVC para la gestión de entregas y pedidos, diseñada para empresas de logística y distribución. Permite administrar zonas, horarios de entrega, asignación automática de conductores y calendarización visual de slots disponibles. Incluye integración con bases de datos, procedimientos almacenados y lógica de negocio para agendamiento y control de pedidos.
 
@@ -33,11 +43,12 @@ Este proyecto es una aplicación web ASP.NET MVC para la gestión de entregas y 
 - Consulta la documentación en `docs/` para detalles técnicos, estructura de base de datos, y ejemplos de uso de la API.
 - El archivo `INSTRUCCIONES.txt` contiene pasos rápidos para desarrolladores.
 
+
 ## Cómo funciona la aplicación
-- El usuario selecciona una zona y visualiza los horarios disponibles en el calendario.
-- Al seleccionar un slot, la aplicación valida disponibilidad y agenda el pedido.
-- Los slots ocupados no aparecen como disponibles (si la base de datos está correctamente configurada).
-- El panel de administración permite gestionar usuarios, zonas y pedidos.
+- El usuario selecciona una zona y visualiza los horarios disponibles en el calendario semanal.
+- Al seleccionar un slot, la aplicación valida disponibilidad y agenda el pedido correctamente, evitando doble agendamiento.
+- Los slots ocupados se muestran como "OCUPADO" y no pueden seleccionarse.
+- El panel de administración permite gestionar usuarios, zonas, perfiles y pedidos.
 
 ## Requisitos
 - .NET Framework 4.5+
@@ -59,5 +70,3 @@ La documentación completa se encuentra en la carpeta `docs/` y cubre:
 
 ---
 
-# Contacto
-Para soporte o dudas, contacta a sistemas@chaide.com
