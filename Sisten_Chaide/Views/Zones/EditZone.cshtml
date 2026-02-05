@@ -1,0 +1,204 @@
+﻿@using System.Web.Script.Serialization
+@using www
+@using www.Helpers
+@using Sisten_Chaide.Resources.Labels
+@using Sisten_Chaide.Models
+
+@model Zone
+@{
+    ViewBag.Title = "Zonas";
+    ViewBag.PageTitle = @Labels.ZoneInformation;
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+}
+
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/Leaflet/leaflet.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/Leaflet-Draw/leaflet.draw.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/Leaflet OMS/Control.OSMGeocoder.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/bootstrap/bootstrap-datetimepicker.min.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/bootstrap/bootstrap-datetimepicker-standalone.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/Leaflet/easy-button.css")" />
+
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/toggle/bootstrap-switch.css")" />
+<link rel="stylesheet" href="http://netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css">
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/Leaflet/easy-button.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/LeafLet OMS/Control.OSMGeocoder.css")" />
+
+@*<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery-1.7.1.min.js")"></script>*@
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/bootstrap/bootstrap.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery-ui-1.12.1.js")"></script>
+@*<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery-2.2.4.js")"></script>*@
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/Maps/Leaflet/leaflet-src.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/Maps/Leaflet-Draw/leaflet.draw.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/Maps/Leaflet OMS/Control.OSMGeocoder.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/Maps/Leaflet/easy-button.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/bootstrap/moment.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/bootstrap/bootstrap-datetimepicker.js")"></script>
+
+
+
+@*<script type="text/javascript" src="/Scripts/plugins/datepicker/jquery.ui.datepicker-en.min.js"></script>
+    <script type="text/javascript" src="~/Scripts/plugins/timepicker/jquery.ui.timepicker.min.js"></script>*@
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.unobtrusive.min.js")"></script>
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/labels.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/inputmask/jquery.inputmask.bundle.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/web.zone.js")"></script>
+
+
+
+
+<style>
+    #map {
+        position: relative;
+        height: 500px;
+    }
+
+    .hasDatepicker {
+        background: #edeef0;
+        font-size: 14px !important;
+        color: #4d4d4d !important;
+    }
+</style>
+
+<div class="col-sm-12 clients">
+    @using (Html.BeginForm("addZone", "Zones", FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        @Html.HiddenFor(m => m.Polygon)
+        @Html.HiddenFor(m => m.Id)
+        @Html.HiddenFor(m => m.CreationDate)
+        @Html.HiddenFor(m => m.PolygonGeo)
+        @Html.HiddenFor(m => m.strCalendarFromLock)
+        @Html.HiddenFor(m => m.strCalendarToLock)
+        @Html.HiddenFor(m => m.strCalendarInitHour)
+        @Html.HiddenFor(m => m.srtCalendarEndHour)
+        @Html.HiddenFor(m => m.intervalValue)
+        @Html.HiddenFor(m => m.lockCalendar)
+        <input type="hidden" id="initDate" name="initDate" />
+        <input type="hidden" id="endDate" name="endDate" />
+
+        <div class="panel panel-inverse">
+            <div class="form-group">
+                <label class="control-label col-sm-2">@Labels.ZoneName </label>
+                <div class="col-sm-4">
+                    @Html.TextBoxFor(m => m.name, new { @class = "form-control input-sm" })
+                    @Html.ValidationMessageFor(m => m.name)
+                    <input type="hidden" id="Userid" value="@ViewBag.id" />
+                </div>
+            </div>
+        </div>
+
+        <div class="panel panel-inverse">
+            <div class="panel-heading">
+                <h4>@Labels.ZoneInformation</h4>
+            </div>
+            <div class="panel-body">
+                <div id="map"></div>
+            </div>
+        </div>
+
+
+        <div class="panel-orange form-group">
+            <div class="panel-heading">
+                <h4>Gestionar Horarios</h4>
+            </div>
+            <div class="panel-body">
+                <div class="panel-group">
+                    <div class="panel-body form-group">
+                        <div class="page-header">
+                            <h3>Configurar horario e Intervalo:</h3>
+                        </div>
+                        <div class="form-group col-md-12">
+                            <label class="control-label col-md-1">Hora Inicio:</label>
+                            <div class="col-md-3 input-group date" id='datetimepicker1'>
+                                <input type="text" autocomplete="off" readonly name="initDateClient" class="form-control" />
+                                <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-time"></span>
+                                </span>
+                            </div>
+                            <label class="control-label col-md-1">Hora Fin:</label>
+                            <div class="col-md-3 input-group date" id='datetimepicker2'>
+                                <input type="text" autocomplete="off" readonly name="endDateClient" class="form-control" />
+                                <span class="input-group-addon">
+                                    <span class="glyphicon glyphicon-time"></span>
+                                </span>
+                            </div>
+                            <label class="control-label col-md-1">Intervalo de Tiempo para entrega (min):</label>
+                            <div class="col-md-3 input-group disabled">
+                                @if (Model != null)
+                                {
+                                    <input type="number" autocomplete="off" name="intervalTime" class="form-control" id="interval" min="15" max="120" inputmode="numeric" maxlength="3" required value="@ViewData.Model.intervalValue" />
+                                }
+                                else
+                                {
+                                    <input type="number" autocomplete="off" name="intervalTime" class="form-control" id="interval" min="15" max="120" inputmode="numeric" maxlength="3" required value = 45 />
+                                }
+
+                                @*<span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-chevron-up" readonly></span>
+                                    </span>*@
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel-body form-horizontal" hidden>
+                        <div class="form-group">
+                            <div class="page-header">
+                                <h3>Bloquear Calendario:</h3>
+                            </div>
+                            <div class="form-group center">
+                                <label class="control-label col-md-2">Bloquear Horario:</label>
+                                <div class="col-md-2">
+                                    <label class="mdl-switch mdl-js-switch mdl-js-ripple-effect" for="switch-1">
+                                        @if (Model != null)
+                                        {
+                                            <input type="checkbox" id="switch-1" class="mdl-switch__input" checked="@ViewData.Model.lockCalendar">
+                                        }
+                                        else
+                                        {
+                                            <input type="checkbox" id="switch-1" class="mdl-switch__input">
+                                        }
+                                        <span class="mdl-switch__label"></span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group" id="viewCalendar">
+                            <div class="form-group">
+                                @*<label class="control-label col-md-2">Bloquear Horario:</label>*@
+                                <label class="control-label col-md-2">Fecha Inicio:</label>
+                                <div class="col-md-3 input-group date" id='datepickerFr'>
+                                    <input type="text" autocomplete="off" readonly name="initDateClient" class="form-control" />
+                                    <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-calendar"></span>
+                                    </span>
+                                </div>
+                                <label class="control-label col-md-1">Fecha Fin:</label>
+                                <div class="col-md-3 input-group date" id='datepickerTo'>
+                                    <input type="text" autocomplete="off" readonly name="endDateClient" class="form-control" />
+                                    <span class="input-group-addon">
+                                        <span class="glyphicon glyphicon-calendar"></span>
+                                    </span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        if (ApplicationContext.LoggedUser != null)
+        {
+
+            <p class="btn-group pull-right">
+                <div style="margin: 10px 0;">
+                    <a class="btn btn-default" href="@Url.Action("Index")">@Labels.Cancel</a>
+                    <input type="submit" class="btn btn-primary" value="@Labels.Save" />
+                </div>
+            </p>
+        }
+    }
+
+</div>

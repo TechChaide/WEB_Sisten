@@ -1,0 +1,5 @@
+﻿@model Sisten_Chaide.Message
+
+<div class='alert alert-dismissable alert-@Html.DisplayFor(m => m.message_type)'>
+	@(new HtmlString(Model.message_body))<button type='button' class='close' data-dismiss='alert' aria-hidden='true'>×</button>
+</div>

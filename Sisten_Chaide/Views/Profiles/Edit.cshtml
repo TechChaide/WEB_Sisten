@@ -1,0 +1,108 @@
+﻿@using www
+@using www.Helpers
+
+@using Newtonsoft.Json
+
+@using Sisten_Chaide.Resources.Labels
+
+@model Sisten_Chaide.Models.FormProfile
+
+@{
+    ViewBag.Title = string.Format("{0}",  ViewBag.PageTitle);
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+    ViewBag.PageTitle = ViewBag.PageTitle;
+}
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.unobtrusive.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery.validate.custom.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/labels.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/inputmask/jquery.inputmask.bundle.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/web.profiles.js")"></script>
+
+@{
+    Message msg = TempData["Message"] as Message;
+    if (msg != null)
+    {
+		@Html.Partial("_Message", msg);
+    }
+}
+
+<div class="col-sm-12 profiles">
+    @using (Html.BeginForm("Edit", "Profiles", FormMethod.Post, new { @class = "form-horizontal" }))
+    {
+		@Html.HiddenFor(m => m.profile.Id)
+		@Html.HiddenFor(m => m.is_new)
+        
+
+     <div class="panel panel-inverse">
+			<div class="panel-heading"><h4>@Labels.ProfileInformation</h4></div>
+			<div class="panel-body">                 
+				<div class="form-group">
+					<label class="control-label col-sm-2">@Labels.Name </label>
+            <div class="col-sm-4">
+              @Html.TextBoxFor(m => m.profile.Name, new { @class = "form-control input-sm" })  
+              @Html.ValidationMessageFor(m => m.profile.Name)           
+            </div> 
+            @*<label class="control-label col-sm-2">@Labels.Public</label>*@
+            @*<div class="col-sm-4">
+                <ul class="gl-list-group">
+                  <li>
+                  @Html.RadioButtonFor(e => e.profile.is_public, true, new { id = "true" })
+                  @Html.Label("public-true", @Labels.Yes)
+                  </li>
+                  <li>
+                  @Html.RadioButtonFor(e => e.profile.is_public, false, new { id = "false" })
+                  @Html.Label("public-false", @Labels.No) 
+                  </li>
+                </ul>  
+            </div>*@                    
+				</div>              			
+			</div>
+		</div>
+        
+    <div class="panel panel-orange">
+			<div class="panel-heading"><h4>@Labels.Functionalities</h4></div>
+			<div class="panel-body">
+        <div class="col-sm-12">                     
+						<ul class="perfil-ul" >
+              @for (int j = 0; j < Model.profile.development_function.Count; j++)
+              {
+                <li>
+                  <div class="col-sm-4">
+                    @Html.CheckBoxFor(m => m.profile.development_function[j].active, new { @class = "group-feature-selector", dev_function = Model.profile.development_function[j].id, data_val = false })
+                    @Model.profile.development_function[j].name
+                  </div>                 
+                </li>
+              }					                          
+						</ul>						
+				</div>				
+			</div>
+		</div>
+      
+     <div class="panel panel-orange">
+			<div class="panel-heading"><h4>@Labels.Users</h4></div>
+			<div class="panel-body">
+        <div class="col-sm-12">                     
+						<ul class="perfil-ul" >
+              @for (int j = 0; j < Model.users.Count; j++)
+              {
+                <li>
+                  <div class="col-sm-4">                    
+                    @Model.users[j]
+                  </div>                 
+                </li>
+              }					                          
+						</ul>						
+				</div>				
+			</div>
+		</div>
+        
+   <p class="btn-group pull-right">
+			<a class="btn btn-default" href="@Url.Action("Index")">@Labels.Cancel</a>
+			<input type="submit" class="btn btn-primary" value="@Labels.Save" />
+		</p>
+				
+    }	
+	
+</div>

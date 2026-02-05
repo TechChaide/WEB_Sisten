@@ -1,0 +1,315 @@
+﻿@using Sisten_Chaide
+@using Resources
+@using Sisten_Chaide.Helpers
+@using Sisten_Chaide.Resources.Labels
+
+
+@model Sisten_Chaide.Models.GenerateDelivery
+@{
+    ViewBag.PageTitle = "Generar Entrega";
+    Layout = "~/Views/Shared/_MainLayout.cshtml";
+    ViewBag.PageTitle = @Labels.GenerateDelivery;
+}
+
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery-1.7.1.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery-ui-1.10.1.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/labels.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/toggle/bootstrap-switch.min.js")"></script>
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/web.delivery_order.js")"></script>
+
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/calendar/fullcalendar.min.css")" />
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/calendar/moment.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/calendar/fullcalendar.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/calendar/es.js")"></script>
+
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/datatable/jquery.dataTables.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/toggle/bootstrap-switch.css")" />
+
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/Leaflet/leaflet.css")" />
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/datatable/jquery.dataTables.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/datatable/dataTables.bootstrap.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/labels.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/bootstrap.min.js")"></script>
+
+
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/Leaflet OMS/Control.OSMGeocoder.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/Leaflet/easy-button.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/Leaflet-Search/leaflet-search.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/Maps/Leaflet-Draw/leaflet.draw.css")" />
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+
+
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/Maps/Leaflet/leaflet-src.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/Maps/Leaflet OMS/Control.OSMGeocoder.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/Maps/Leaflet/easy-button.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/Maps/Leaflet-Search/leaflet-search.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/Maps/Leaflet-Draw/leaflet.draw.js")"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/js/select2.min.js"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/select2/es.js")"></script>
+
+
+@{
+    Message msg = TempData["Message"] as Message;
+    if (msg != null)
+    {
+        @Html.Partial("_Message", msg);
+    }
+}
+
+<style>
+    #map {
+        position: relative;
+        height: 500px;
+    }
+
+    .search-input {
+        font-family: Courier;
+    }
+
+    .search-input,
+    .leaflet-control-search {
+        max-width: 400px;
+    }
+
+    /*.progress-bar.animate {
+        width: 100%;
+    }*/
+</style>
+
+<div class="col-sm-12 clients">
+    @using (Html.BeginForm("AddDelivery", "Delivery", FormMethod.Post, new { enctype = "multipart/form-data", DefaultButton = "SaveDelivery", id = "MyForm" }))
+    {
+        @Html.HiddenFor(m => m.client.Province);
+        @Html.HiddenFor(m => m.client.CodeClient);
+        @Html.HiddenFor(m => m.StatusItem);
+        @Html.HiddenFor(m => m.lat);
+        @Html.HiddenFor(m => m.lng);
+        @Html.HiddenFor(m => m.driver.user.Id);
+        @Html.HiddenFor(m => m.dateDelivery);
+        @Html.HiddenFor(m => m.EndDelivery);
+        @Html.HiddenFor(m => m.StatusItem);
+        @Html.HiddenFor(m => m.ItemDispatch);
+        @Html.HiddenFor(m => m.driver.zone.strCalendarInitHour);
+        @Html.HiddenFor(m => m.driver.zone.srtCalendarEndHour);
+        @Html.HiddenFor(m => m.driver.zone.intervalValue);
+        @Html.HiddenFor(m => m.driver.zone.lockCalendar);
+        @Html.HiddenFor(m => m.driver.zone.strCalendarFromLock);
+        @Html.HiddenFor(m => m.driver.zone.strCalendarToLock);
+        <div class="panel panel-inverse">
+            <div class="form-group">
+                <label class="control-label col-xs-2">@Resources.Order.Order.SearchOrder </label>
+                <div class="col-sm-4">
+                    @*<input type="text" class="search-input input-sm" id="OrderNumber"/>*@
+                    @Html.TextBoxFor(m => m.OrderNumber, new { @class = "form-control input-sm" })
+                    @Html.ValidationMessageFor(m => m.OrderNumber)
+                </div>
+                <div class="col-sm-4">
+                    <input type="button" class="btn btn-primary search-button" value="@Labels.Search" id="searchOrder" data-loading-text="Cargando..." autocomplete="off" />
+                </div>
+            </div>
+            @*<div id='loadingmessage' style='display:none'>
+                    <img src='~/Resources/Images/ajax-loader.gif' />
+                </div>*@
+        </div>
+        
+        
+          if (ApplicationContext.LoggedUser != null)
+        {
+            if (ApplicationContext.LoggedUser.username.Contains("resiflex"))
+            {
+                <div class="form-group">
+                    <label class="control-label col-sm-2">Cédula</label>
+                    <div class="col-sm-4">
+                        @Html.TextBoxFor(m => m.client.cedula, new { @class = "form-control input-sm" ,id = "cedula" })
+                    </div>
+                    <div class="col-sm-4">
+
+                    </div>
+                </div>
+                <br />
+                <br />
+            }
+        }
+        
+        
+        
+        <div class="col-sm-pull-4">
+            <div class="panel panel-inverse">
+                <div class="panel-heading">
+                    <h4>@Labels.ClientInformation</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <label class="control-label col-sm-2">@Labels.Name </label>
+                        <div class="col-sm-4">
+                            @Html.TextBoxFor(m => m.client.ClientName, new { @class = "form-control input-sm", @readonly = "readonly" })
+                        </div>
+                        <label class="control-label col-sm-2">@Labels.Phone_number </label>
+                        <div class="col-sm-4">
+                            @Html.TextBoxFor(m => m.client.PhoneNumber, new { @class = "form-control input-sm", @readonly = "readonly" })
+                        </div>
+                        <label class="control-label col-sm-2">@Labels.City </label>
+                        <div class="col-sm-4">
+                            @Html.TextBoxFor(m => m.client.City, new { @class = "form-control input-sm", @readonly = "readonly" })
+                        </div>
+                        <label class="control-label col-sm-2">@Labels.Address </label>
+                        <div class="col-sm-4">
+                            @Html.TextBoxFor(m => m.client.Address, new { @class = "form-control input-sm", @readonly = "readonly" , maxlength = 35})
+                        </div>
+                        <label class="control-label col-sm-2">@Labels.Email </label>
+                        <div class="col-sm-4">
+                            @Html.TextBoxFor(m => m.client.email, new { @class = "form-control input-sm", @readonly = "readonly" })
+                        </div>
+                        <label class="control-label col-sm-2">@Labels.MobilePhone </label>
+                        <div class="col-sm-4">
+                            @Html.TextBoxFor(m => m.client.CellPhoneNumber, new { @class = "form-control input-sm", @readonly = "readonly" })
+                        </div>
+                        <label class="control-label col-sm-2">@Labels.SellerName </label>
+                        <div class="col-sm-4">
+                            @Html.TextBoxFor(m => m.client.SellerName, new { @class = "form-control input-sm", @readonly = "readonly" })
+                        </div>
+                        @if (ApplicationContext.LoggedUser != null)
+                        {
+                            if (ApplicationContext.LoggedUser.username.Contains("resiflex"))
+                            {
+                                @Html.TextBoxFor(m => m.client.SellerName, new { @class = "form-control input-sm", Value = "" + ApplicationContext.LoggedUser.username + "", @readonly = "readonly", style = "display: none;", id = "vendedor" })
+                                @Html.TextBoxFor(m => m.Deliveries, new { @class = "form-control input-sm", @readonly = "readonly", style = "display: none;", value = "001" })
+                            }
+                            else
+                            {
+                                <label class="control-label col-sm-2">@Labels.DeliverNumber </label>
+                                <div class="col-sm-4">
+                                    @Html.TextBoxFor(m => m.Deliveries, new { @class = "form-control input-sm", @readonly = "readonly" })
+                                </div>
+
+                            }
+                        }
+                        <label class="control-label col-sm-2">@Labels.AddressReference </label>
+                        <div class="col-sm-4">
+                            @Html.TextAreaFor(m => m.ReferenceAddress, new { @class = "form-control input-sm",maxlength = 50 })
+                        </div>
+                        <label class="control-label col-sm-2">Donación de Plástico</label>
+                        <div class="col-sm-4">
+                            @Html.CheckBoxFor(m => m.client.donacion)
+                        </div>
+
+                        <label class="control-label col-sm-2">Vulnerable</label>
+                        <div class="col-sm-4">
+                            @Html.CheckBoxFor(m => m.client.vulnerable)
+                        </div>
+
+
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-inverse">
+                <div class="panel-heading">
+                    <h4>@Labels.ItemsDetails</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <table class="table table-bordered table-striped table-condensed" id="grid-users">
+                            <thead>
+                                <tr>
+                                    <th>@Labels.OrderNumber</th>
+                                    <th>@Labels.Code</th>
+                                    <th>@Labels.Name</th>
+                                    <th>@Labels.Quantity</th>
+                                    <th>Cantidad Despachar</th>
+                                    <th>@Labels.Status</th>
+                                    <th>@Labels.Dispatched</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-inverse">
+                <div class="panel-heading">
+                    <h4>@Labels.AddressOrder</h4>
+                </div>
+                <div class="panel-body" id="map">
+                </div>
+            </div>
+
+            <div class="panel panel-inverse">
+                <div class="panel-heading">
+                    <h4>@Labels.ZoneInformation</h4>
+                </div>
+                <div class="panel-body" id="ZoneInformation">
+                    <div class="form-group">
+                        <label class="control-label col-sm-2">@Labels.ZoneName </label>
+                        <div class="col-sm-4">
+                            @Html.TextBoxFor(m => m.driver.zone.name, new { @class = "form-control input-sm", @readonly = "readonly" })
+                        </div>
+                        <label class="control-label col-sm-2">@Labels.ZoneId </label>
+                        <div class="col-sm-4">
+                            @Html.TextBoxFor(m => m.driver.zone.Id, new { @class = "form-control input-sm", @readonly = "readonly" })
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="panel panel-inverse">
+                <div class="panel-heading">
+                    <h4>@Labels.DeliverySchedule</h4>
+                </div>
+                <div class="panel-body" id="driverInfo">
+                    <div class="form-group">
+                        <label class="control-label col-sm-2">Seleccione Chofer</label>
+                        <div class="col-md-4">
+                            <select class="driver_filter select2-selection" multiple="multiple" style="width: 100%"></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group">
+                        <div id='calendar'></div>
+                    </div>
+                </div>
+            </div>
+
+            <p class="btn-group pull-right">
+
+
+
+                @if (ApplicationContext.LoggedUser != null)
+                {
+                    if (ApplicationContext.LoggedUser.username.Contains("resiflex"))
+                    {
+                        <a class="btn btn-default" href="@Url.Action("GenerateDelivery")">@Labels.Cancel</a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-default" href="@Url.Action("Index")">@Labels.Cancel</a>
+                    }
+                }
+                
+                <input type="submit" class="btn btn-primary" value="@Labels.Save" id="SaveDelivery" />
+            </p>
+
+            <div id="fullCalModal" class="modal fade">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 id="modalTitle" class="modal-title"></h4>
+                        </div>
+                        <div id="modalBody" class="modal-body">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+
+
+</div>

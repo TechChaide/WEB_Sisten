@@ -1,0 +1,27 @@
+﻿@using Sisten_Chaide
+
+<nav id="page-leftbar">
+	<ul class="acc-menu" id="sidebar">		
+		@foreach (MenuItem grp in ApplicationContext.ApplicationMenu)
+		{
+			<li @(grp.Childs != null && grp.Childs.Count > 0 ? new HtmlString("class='open hasChild'") : new HtmlString(""))>
+				<a href="@(grp.Url != null ? string.Format(Url.Content("~/{0}/{1}"), grp.Url, "es") : "javascript:void(0);")">
+					@if (grp.Icon != null)
+					{
+						<i class="fa @grp.Icon"></i>
+					}
+					<span>@grp.Text</span>
+				</a>
+				@if (grp.Childs != null && grp.Childs.Count > 0)
+				{
+					<ul class="acc-menu">
+					@foreach (MenuItem item in grp.Childs)
+					{            
+						<li><a href="@(item.Url != null ? string.Format(Url.Content("~/{0}/{1}"), item.Url, "es") : "javascript:void(0);")"><span>@item.Text</span></a></li>
+					}					
+					</ul>
+				}
+			</li>			
+		}
+	</ul>
+</nav>

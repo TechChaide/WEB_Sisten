@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<menu>
+  <item name="mainGroup" url="home/index" text="Inicio" icon="fa-home" force-view="true"/>
+  <item name="DeliveryGroup" text="Entregas" icon="fa-bar-chart-o">
+    <item name="delivery" url="delivery/Itinerary" text="Centro de monitoreo" code="CEMO0001" />
+    <item name="delivery" url="delivery/Index" text="Administrador de entregas" code="DELI0001"/>
+    <item name="delivery" url="delivery/GenerateDelivery" text="Agendar de entregas" code="DELI0002"/>
+  </item>
+  <item name="Security" text="Seguridad" icon="fa-key">
+    <item name="users" url="users/index" text="Gestión de Usuarios" code="USER0001"/>
+    <item name="profiles" url="profiles/index" text="Gestión de Perfiles" code="PROF0001"/>
+  </item>
+  <item name="Zones" text="Zonas" icon="fa-laptop">
+    <item name="AdminZone" url="Zones/Index" text="Administrar Zonas" code="ZONE0006"/>
+    <item name="AssingZone" url="Zones/AssingIndex" text="Asignar Zonas" code="ZONE0005"/>
+  </item>
+</menu>

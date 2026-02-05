@@ -1,0 +1,57 @@
+﻿@using Resources
+@using Sisten_Chaide.Helpers
+@using Sisten_Chaide.Resources.Labels
+@using Sisten_Chaide.Models
+
+
+@model Dictionary<string, object>
+
+@{
+  ViewBag.Title = "Perfiles";
+  Layout = "~/Views/Shared/_MainLayout.cshtml";
+  ViewBag.PageTitle = @Labels.TitleProfile;
+  
+}
+
+
+
+@*@Html.UsingJs("datatable")
+@Html.UsingJs("datatable-bootstrap")
+@Html.UsingJs("toggle")
+@Html.UsingJs("profiles")
+@Html.UsingJs("labels")*@
+
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/datatable/jquery.dataTables.css")" />
+<link rel="stylesheet" href="@Url.Content("~/Scripts/plugins/toggle/bootstrap-switch.css")" />
+
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/datatable/jquery.dataTables.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/datatable/dataTables.bootstrap.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/plugins/toggle/bootstrap-switch.min.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/labels.js")"></script>
+<script type="text/javascript" src="@Url.Content("~/Scripts/web.profiles.js")"></script>
+
+@{
+	Message m = TempData["Message"] as Message;
+	if (m != null)
+	{
+         @Html.Partial("_Message", m);
+	}
+}
+
+@if (ApplicationContext.LoggedUser.HasPermission("PROF0002"))
+{
+    <div class="form-group">
+		<a class="btn btn-primary btn-sm" href="@Url.Action("New")">@Labels.NewProfile</a>
+	</div>
+}
+
+<table class="table table-bordered table-striped table-condensed" id="grid-profiles" >
+    <thead>
+			<tr>
+				<th>@Labels.Code</th>
+				<th>@Labels.Name</th>				
+        <th></th>							
+			</tr>
+    </thead>
+  </table>
+

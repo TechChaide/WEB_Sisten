@@ -1,0 +1,122 @@
+﻿@using Sisten_Chaide
+@using www.Helpers
+@using System.Configuration
+@using System.Threading
+@using System.Collections.Generic
+@using System.Web.Script.Serialization
+@using Sisten_Chaide.Models
+@using System.Collections
+@using Sisten_Chaide
+@using Sisten_Chaide.Helpers
+@using Sisten_Chaide.Resources;
+@using Sisten_Chaide.Resources.Labels
+
+
+<!DOCTYPE html>
+<html style="height: 100%;">
+<head>
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script type='text/javascript' src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+      <script type='text/javascript' src="//cdnjs.cloudflare.com/ajax/libs/respond.js/1.4.2/respond.js"></script>
+    <![endif]-->
+
+    <title>@ViewBag.Title</title>
+
+    <link rel="stylesheet" href="@Url.Content("~/Styles/app/style.css")" />
+    @*<script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery-1.8.2.min.js")"></script>*@
+    <script type="text/javascript" src="@Url.Content("~/Scripts/jquery/jquery-2.2.4.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/Scripts/web.utilities.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/Scripts/labels.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/Scripts/web.main.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/Scripts/plugins/bootstrap/bootstrap.min.js")"></script>
+
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+
+    @{
+        var lang = "es";
+        var context = new JavaScriptSerializer().Serialize(new { loggedUser = ApplicationContext.LoggedUser });
+    }
+
+</head>
+<body>
+
+    <input id="context" type="hidden" value="@context" />
+    <input id="root" type="hidden" value="@Url.Content("~/")" />
+    <input id="datatable-lang-url" type="hidden" value="@Url.Content(string.Format("~/Content/data-tables/es.txt"))">
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/layoutjs")
+    <div class="opaquebg"></div>
+    <div class="loadPage">
+        @*<div class="mdl-spinner mdl-js-spinner--single-color is-active"></div>*@
+        <div class="mdl-spinner mdl-spinner--single-color mdl-js-spinner is-active"></div>
+    </div>
+    <header class="navbar">
+        <a id="leftmenu-trigger" class="pull-left tooltips" data-toggle="tooltip" data-placement="right" title="@Labels.MainMenu"></a>
+        <div class="navbar-header pull-left"><a id="navbar-brand" href='@Url.Action("Index", "Home")'></a></div>
+        <ul class="nav-header pull-right">
+            <li>
+                <a class="dropdown-toggle user" data-toggle="dropdown" href="#">
+                    <span>
+                        @if (ApplicationContext.LoggedUser != null)
+                        {
+                            @ApplicationContext.LoggedUser.username
+                        }<i class="fa fa-caret-down"></i>
+                            <br />
+                        </span>
+                </a>
+                <ul class="dropdown-menu pop-options">
+                    <li class="user">
+                        <span>
+                            @if (ApplicationContext.LoggedUser != null)
+                            {
+                                @ApplicationContext.LoggedUser.username
+                            }
+                        </span>
+                    </li>
+                    <li class="text-right signout">@Html.ActionLink(@Labels.SignOut, "Logout", "Account")</li>
+                </ul>
+            </li>
+        </ul>
+    </header>
+
+    <div id="page-container">
+        @Html.Partial("_Menu")
+        <div id="page-content">
+            <div id="wrap">
+                <div id="page-heading">
+                    <h1>@ViewBag.PageTitle</h1>
+                    <div class="options">
+                        @RenderSection("options", false)
+                    </div>
+                </div>
+                <div id="content" class="container">@RenderBody()</div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <span class="pull-right powered">Versión @ViewContext.Controller.GetType().Assembly.GetName().Version</span>
+    </footer>
+
+    @Html.Partial("_MessagesPartial")
+    @Html.Partial("_Confirm")
+    @Html.Partial("_Alert")
+
+    @*@foreach (var y in ((Dictionary<string, HtmlInclude>)ViewData["js"]))
+        {
+          var j = y.Value;
+          if (@j.enabled)
+          {
+            var jsUrl = @j.url.IndexOf("http://") >= 0 ? @j.url : @Url.VersionedUrl((@j.url.IndexOf("?v") >= 0 ? @j.url.Replace("?v", "") : @j.url), @j.url.IndexOf("?v") >= 0);
+            <script src="@jsUrl"></script>
+          }
+        }*@
+
+    @RenderSection("script", false)
+</body>
+
+</html>
