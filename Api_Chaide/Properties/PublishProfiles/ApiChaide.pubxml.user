@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+Este archivo se usa en el proceso de publicación y empaquetado del proyecto web. Para personalizar el comportamiento de este proceso,
+edite el archivo MSBuild. Visite https://go.microsoft.com/fwlink/?LinkID=208121 para obtener más información. 
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <_PublishTargetUrl>C:\ApiChaide</_PublishTargetUrl>
+  </PropertyGroup>
+  <ItemGroup>
+    <File Include="bin/API_Chaide.dll">
+      <publishTime>09/09/2020 01:48:35</publishTime>
+    </File>
+    <File Include="bin/API_Chaide.pdb">
+      <publishTime>09/09/2020 01:48:35</publishTime>
+    </File>
+    <File Include="bin/es/System.Net.Http.Formatting.resources.dll">
+      <publishTime>06/27/2014 02:04:18</publishTime>
+    </File>
+    <File Include="bin/es/System.Web.Http.resources.dll">
+      <publishTime>06/27/2014 02:04:34</publishTime>
+    </File>
+    <File Include="bin/es/System.Web.Http.WebHost.resources.dll">
+      <publishTime>06/27/2014 02:06:00</publishTime>
+    </File>
+    <File Include="bin/Newtonsoft.Json.dll">
+      <publishTime>04/27/2014 15:13:04</publishTime>
+    </File>
+    <File Include="bin/System.Net.Http.Formatting.dll">
+      <publishTime>06/27/2014 02:04:12</publishTime>
+    </File>
+    <File Include="bin/System.Web.Http.dll">
+      <publishTime>06/27/2014 02:04:28</publishTime>
+    </File>
+    <File Include="bin/System.Web.Http.WebHost.dll">
+      <publishTime>06/27/2014 02:05:54</publishTime>
+    </File>
+    <File Include="Global.asax">
+      <publishTime>02/27/2019 22:21:26</publishTime>
+    </File>
+    <File Include="packages.config">
+      <publishTime>02/27/2019 22:21:26</publishTime>
+    </File>
+    <File Include="Web.config">
+      <publishTime>09/02/2020 22:52:27</publishTime>
+    </File>
+  </ItemGroup>
+</Project>
